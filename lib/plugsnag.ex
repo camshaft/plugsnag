@@ -1,7 +1,5 @@
 
 defmodule Plugsnag do
-  import Plug.Conn
-
   @doc false
   defmacro __using__(opts) do
     quote do

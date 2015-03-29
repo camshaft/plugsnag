@@ -23,6 +23,7 @@ defmodule Plugsnag.Mixfile do
   end
 
   defp deps do
-    [{:bugsnag, github: "camshaft/bugsnag-elixir"}]
+    [{:bugsnag, github: "camshaft/bugsnag-elixir"},
+     {:plug, ">= 0.11.0"}]
   end
 end
