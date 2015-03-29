@@ -2,6 +2,9 @@ defmodule Plugsnag do
   defmacro __using__(_env) do
     quote location: :keep do
       @before_compile Plugsnag
+
+      def plugsnag_context(_conn, _exception), do: nil
+      defoverridable [plugsnag_context: 2]
     end
   end
 
@@ -18,7 +21,8 @@ defmodule Plugsnag do
 
             exception
             |> IO.inspect
-            |> Bugsnag.report(metadata: %{"request" => Plugsnag.format_request(conn)})
+            |> Bugsnag.report(metadata: %{"request" => Plugsnag.format_request(conn)},
+                              context: plugsnag_context(conn, exception))
 
             reraise exception, stacktrace
         end
@@ -27,9 +31,15 @@ defmodule Plugsnag do
   end
 
   def format_request(conn) do
-    headers = Enum.map(conn.req_headers, fn({k, v}) ->
-      %{"name" => k,
-        "value" => v}
+    headers = Enum.reduce(conn.req_headers, %{}, fn({k, v}, acc) ->
+      case Map.get(acc, k) do
+        nil ->
+          Map.put(acc, k, v)
+        prev when is_binary(prev) ->
+          Map.put(acc, k, [v, prev])
+        prev ->
+          Map.put(acc, k, [v | prev])
+      end
     end)
 
     %{"host" => conn.host,
