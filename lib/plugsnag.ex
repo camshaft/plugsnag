@@ -18,11 +18,24 @@ defmodule Plugsnag do
 
             exception
             |> IO.inspect
-            |> Bugsnag.report
+            |> Bugsnag.report(metadata: %{"request" => Plugsnag.format_request(conn)})
 
             reraise exception, stacktrace
         end
       end
     end
+  end
+
+  def format_request(conn) do
+    headers = Enum.map(conn.req_headers, fn({k, v}) ->
+      %{"name" => k,
+        "value" => v}
+    end)
+
+    %{"host" => conn.host,
+      "method" => conn.method,
+      "path" => Plug.Conn.full_path(conn),
+      "headers" => headers,
+      "params" => conn.params}
   end
 end
